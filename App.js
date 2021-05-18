@@ -30,6 +30,7 @@ const ITEM_SPACING = (width - ITEM_SIZE) / 2;
 export default function App() {
   const scrollX = React.useRef(new Animated.Value(0)).current;
   const [duration, setDuration] = React.useState(timers[0]);
+  const inputRef = React.useRef();
   const timerAnimation = React.useRef(new Animated.Value(height)).current;
   const buttonAnimation = React.useRef(new Animated.Value(0)).current;
   const animation = React.useCallback(() => {
@@ -53,7 +54,11 @@ export default function App() {
         useNativeDriver: true
       })
     ]).start(() => {
-       buttonAnimation.setValue(0);
+       Animated.timing(buttonAnimation, {
+         toValue: 0,
+         duration: 300,
+         useNativeDriver: true
+       }).start()
     })
   }, [duration])
 
@@ -64,6 +69,11 @@ export default function App() {
   const translateY = buttonAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 200]
+  })
+
+  const textOpacity = buttonAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1]
   })
   return (
     <View style={styles.container}>
@@ -106,7 +116,20 @@ export default function App() {
           right: 0,
           flex: 1,
         }}>
-          <Text style={styles.text}>{duration}</Text>
+          <Animated.View style={{
+            position:'absolute',
+            width: ITEM_SIZE,
+            justifyContent: 'center',
+            alignSelf: 'center',
+            alignItems: 'center',
+            opacity: textOpacity
+          }}>
+          <TextInput
+            ref={inputRef}
+            style={styles.text}
+            defaultValue={duration.toString()}
+          />
+          </Animated.View>
             <Animated.FlatList
             data={timers}
             keyExtractor={item => item.toString()}
@@ -122,7 +145,7 @@ export default function App() {
             }}
             showsHorizontalScrollIndicator={false}
             snapToInterval={ITEM_SIZE}
-            style={{flexGrow: 0}}
+            style={{flexGrow: 0, opacity}}
             decelerationRate="fast"
             contentContainerStyle={{
               paddingHorizontal: ITEM_SPACING
