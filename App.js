@@ -33,8 +33,22 @@ export default function App() {
   const inputRef = React.useRef();
   const timerAnimation = React.useRef(new Animated.Value(height)).current;
   const buttonAnimation = React.useRef(new Animated.Value(0)).current;
-  const animation = React.useCallback(() => {
+  const textInputAnimation = React.useRef(new Animated.Value(timers[0])).current;
 
+  React.useEffect(() => {
+    const listener = textInputAnimation.addListener(({value}) => {
+      inputRef?.current?.setNativeProps({
+        text: Math.ceil(value).toString()
+      })
+    })
+
+    return () => {
+      textInputAnimation.removeListener(listener)
+      textInputAnimation.removeAllListeners();
+    }
+  })
+  const animation = React.useCallback(() => {
+  textInputAnimation.setValue(duration);
     Animated.sequence([
 
       Animated.timing(buttonAnimation, {
@@ -48,12 +62,23 @@ export default function App() {
         duration: 300,
         useNativeDriver: true
       }),
-      Animated.timing(timerAnimation, {
-        toValue: height,
-        duration: duration * 1000,
-        useNativeDriver: true
-      })
+      Animated.parallel([
+        Animated.timing(textInputAnimation, {
+          toValue: 0,
+          duration: duration * 1000,
+          useNativeDriver: true
+        }),
+        Animated.timing(timerAnimation, {
+          toValue: height,
+          duration: duration * 1000,
+          useNativeDriver: true
+        })
+      ]),
+      Animated.delay(400)
     ]).start(() => {
+      Vibration.cancel();
+      Vibration.vibrate();
+      textInputAnimation.setValue(duration);
        Animated.timing(buttonAnimation, {
          toValue: 0,
          duration: 300,
